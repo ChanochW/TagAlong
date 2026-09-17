@@ -1,0 +1,23 @@
+# Backend
+/be/node_modules/
+/be/dist/
+/be/.env
+/be/.env.*
+!/be/.env.example
+
+# Generated Prisma AI-agent skills
+/be/.agents/
+/be/.claude/
+/be/.cursor/
+/be/.devin/
+
+# Frontend later
+/fe/node_modules/
+/fe/dist/
+/fe/.env
+/fe/.env.*
+!/fe/.env.example
+
+
+
+.idea/

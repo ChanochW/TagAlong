@@ -1,0 +1,87 @@
+// use prisma-8
+
+enum RideStatus {
+  @@type("pg/text@1")
+
+  SCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum RideRequestStatus {
+  @@type("pg/text@1")
+
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String
+  phoneNumber   String   @unique
+  phoneVerified Boolean  @default(false)
+
+  createdAt     temporal.createdAt()
+  updatedAt     temporal.updatedAt()
+
+  rideRequests  RideRequest[]
+  chatMessages  ChatMessage[]
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+
+  createdAt    temporal.createdAt()
+  updatedAt    temporal.updatedAt()
+
+  chatMessages ChatMessage[]
+}
+
+model Ride {
+  id            Int        @id @default(autoincrement())
+  origin        String
+  destination   String
+  departureTime DateTime
+  capacity      Int
+  notes         String?
+  status        RideStatus @default(SCHEDULED)
+
+  createdAt     temporal.createdAt()
+  updatedAt     temporal.updatedAt()
+
+  rideRequests  RideRequest[]
+  chatMessages  ChatMessage[]
+}
+
+model RideRequest {
+  id        Int               @id @default(autoincrement())
+  rideId    Int
+  userId    Int
+  status    RideRequestStatus @default(PENDING)
+
+  createdAt temporal.createdAt()
+  updatedAt temporal.updatedAt()
+
+  ride      Ride @relation(fields: [rideId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
+
+  @@unique([rideId, userId])
+}
+
+model ChatMessage {
+  id        Int @id @default(autoincrement())
+  rideId    Int
+  userId    Int?
+  adminId   Int?
+  content   String
+
+  createdAt temporal.createdAt()
+
+  ride      Ride   @relation(fields: [rideId], references: [id])
+  user      User?  @relation(fields: [userId], references: [id])
+  admin     Admin? @relation(fields: [adminId], references: [id])
+}

@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: rides-postgres
+    environment:
+      POSTGRES_USER: rides
+      POSTGRES_PASSWORD: rides
+      POSTGRES_DB: rides
+    ports:
+      - "5432:5432"
+    volumes:
+      - rides_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  rides_postgres_data:
