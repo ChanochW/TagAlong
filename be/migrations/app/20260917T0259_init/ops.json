@@ -1,0 +1,745 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.admin",
+    "label": "Create table \"admin\"",
+    "summary": "Creates table \"admin\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "admin"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"admin\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admin\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"admin\"",
+        "sql": "CREATE TABLE \"public\".\"admin\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"passwordHash\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"admin\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"admin\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.chatMessage",
+    "label": "Create table \"chatMessage\"",
+    "summary": "Creates table \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"chatMessage\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"chatMessage\"",
+        "sql": "CREATE TABLE \"public\".\"chatMessage\" (\n  \"adminId\" int4,\n  \"content\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"rideId\" int4 NOT NULL,\n  \"userId\" int4,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"chatMessage\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.ride",
+    "label": "Create table \"ride\"",
+    "summary": "Creates table \"ride\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "ride"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"ride\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ride\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"ride\"",
+        "sql": "CREATE TABLE \"public\".\"ride\" (\n  \"capacity\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"departureTime\" timestamptz NOT NULL,\n  \"destination\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"notes\" text,\n  \"origin\" text NOT NULL,\n  \"status\" text DEFAULT 'SCHEDULED' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"ride_status_check_fea4c8bc\" CHECK (\"status\" IN ('SCHEDULED', 'CANCELLED', 'COMPLETED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"ride\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"ride\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.rideRequest",
+    "label": "Create table \"rideRequest\"",
+    "summary": "Creates table \"rideRequest\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "rideRequest"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"rideRequest\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rideRequest\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"rideRequest\"",
+        "sql": "CREATE TABLE \"public\".\"rideRequest\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"rideId\" int4 NOT NULL,\n  \"status\" text DEFAULT 'PENDING' NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"rideRequest_status_check_b5878d47\" CHECK (\"status\" IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"rideRequest\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rideRequest\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.user",
+    "label": "Create table \"user\"",
+    "summary": "Creates table \"user\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"user\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"user\"",
+        "sql": "CREATE TABLE \"public\".\"user\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"name\" text NOT NULL,\n  \"phoneNumber\" text NOT NULL,\n  \"phoneVerified\" bool DEFAULT false NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"user\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.admin.admin_email_key",
+    "label": "Add unique constraint on \"admin\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "admin_email_key",
+        "table": "admin"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"admin_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_email_key",
+          "public",
+          "\"public\".\"admin\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"admin_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"admin\" ADD CONSTRAINT \"admin_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"admin_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "admin_email_key",
+          "public",
+          "\"public\".\"admin\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.rideRequest.rideRequest_rideId_userId_key",
+    "label": "Add unique constraint on \"rideRequest\" (rideId, userId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "rideRequest_rideId_userId_key",
+        "table": "rideRequest"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"rideRequest_rideId_userId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rideRequest_rideId_userId_key",
+          "public",
+          "\"public\".\"rideRequest\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"rideRequest_rideId_userId_key\"",
+        "sql": "ALTER TABLE \"public\".\"rideRequest\" ADD CONSTRAINT \"rideRequest_rideId_userId_key\" UNIQUE (\"rideId\", \"userId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"rideRequest_rideId_userId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rideRequest_rideId_userId_key",
+          "public",
+          "\"public\".\"rideRequest\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.user.user_phoneNumber_key",
+    "label": "Add unique constraint on \"user\" (phoneNumber)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "user_phoneNumber_key",
+        "table": "user"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"user_phoneNumber_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_phoneNumber_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"user_phoneNumber_key\"",
+        "sql": "ALTER TABLE \"public\".\"user\" ADD CONSTRAINT \"user_phoneNumber_key\" UNIQUE (\"phoneNumber\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"user_phoneNumber_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "user_phoneNumber_key",
+          "public",
+          "\"public\".\"user\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.chatMessage.chatMessage_adminId_idx_530179db",
+    "label": "Create index \"chatMessage_adminId_idx_530179db\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "chatMessage_adminId_idx_530179db",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"chatMessage_adminId_idx_530179db\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_adminId_idx_530179db\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"chatMessage_adminId_idx_530179db\"",
+        "sql": "CREATE INDEX \"chatMessage_adminId_idx_530179db\" ON \"public\".\"chatMessage\" (\"adminId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"chatMessage_adminId_idx_530179db\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_adminId_idx_530179db\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.chatMessage.chatMessage_rideId_idx_2125d498",
+    "label": "Create index \"chatMessage_rideId_idx_2125d498\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "chatMessage_rideId_idx_2125d498",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"chatMessage_rideId_idx_2125d498\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_rideId_idx_2125d498\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"chatMessage_rideId_idx_2125d498\"",
+        "sql": "CREATE INDEX \"chatMessage_rideId_idx_2125d498\" ON \"public\".\"chatMessage\" (\"rideId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"chatMessage_rideId_idx_2125d498\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_rideId_idx_2125d498\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.chatMessage.chatMessage_userId_idx_a489d58a",
+    "label": "Create index \"chatMessage_userId_idx_a489d58a\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "chatMessage_userId_idx_a489d58a",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"chatMessage_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"chatMessage_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"chatMessage_userId_idx_a489d58a\" ON \"public\".\"chatMessage\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"chatMessage_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"chatMessage_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rideRequest.rideRequest_rideId_idx_2125d498",
+    "label": "Create index \"rideRequest_rideId_idx_2125d498\" on \"rideRequest\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rideRequest_rideId_idx_2125d498",
+        "table": "rideRequest"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rideRequest_rideId_idx_2125d498\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rideRequest_rideId_idx_2125d498\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rideRequest_rideId_idx_2125d498\"",
+        "sql": "CREATE INDEX \"rideRequest_rideId_idx_2125d498\" ON \"public\".\"rideRequest\" (\"rideId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rideRequest_rideId_idx_2125d498\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rideRequest_rideId_idx_2125d498\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rideRequest.rideRequest_userId_idx_a489d58a",
+    "label": "Create index \"rideRequest_userId_idx_a489d58a\" on \"rideRequest\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rideRequest_userId_idx_a489d58a",
+        "table": "rideRequest"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rideRequest_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rideRequest_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rideRequest_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"rideRequest_userId_idx_a489d58a\" ON \"public\".\"rideRequest\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rideRequest_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rideRequest_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.chatMessage.chatMessage_rideId_fkey",
+    "label": "Add foreign key \"chatMessage_rideId_fkey\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "chatMessage_rideId_fkey",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"chatMessage_rideId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_rideId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"chatMessage_rideId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"chatMessage\"\nADD CONSTRAINT \"chatMessage_rideId_fkey\"\nFOREIGN KEY (\"rideId\")\nREFERENCES \"public\".\"ride\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"chatMessage_rideId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_rideId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.chatMessage.chatMessage_userId_fkey",
+    "label": "Add foreign key \"chatMessage_userId_fkey\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "chatMessage_userId_fkey",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"chatMessage_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_userId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"chatMessage_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"chatMessage\"\nADD CONSTRAINT \"chatMessage_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"chatMessage_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_userId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.chatMessage.chatMessage_adminId_fkey",
+    "label": "Add foreign key \"chatMessage_adminId_fkey\" on \"chatMessage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "chatMessage_adminId_fkey",
+        "table": "chatMessage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"chatMessage_adminId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_adminId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"chatMessage_adminId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"chatMessage\"\nADD CONSTRAINT \"chatMessage_adminId_fkey\"\nFOREIGN KEY (\"adminId\")\nREFERENCES \"public\".\"admin\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"chatMessage_adminId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "chatMessage_adminId_fkey",
+          "public",
+          "\"public\".\"chatMessage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.rideRequest.rideRequest_rideId_fkey",
+    "label": "Add foreign key \"rideRequest_rideId_fkey\" on \"rideRequest\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "rideRequest_rideId_fkey",
+        "table": "rideRequest"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"rideRequest_rideId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rideRequest_rideId_fkey",
+          "public",
+          "\"public\".\"rideRequest\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"rideRequest_rideId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"rideRequest\"\nADD CONSTRAINT \"rideRequest_rideId_fkey\"\nFOREIGN KEY (\"rideId\")\nREFERENCES \"public\".\"ride\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"rideRequest_rideId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rideRequest_rideId_fkey",
+          "public",
+          "\"public\".\"rideRequest\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.rideRequest.rideRequest_userId_fkey",
+    "label": "Add foreign key \"rideRequest_userId_fkey\" on \"rideRequest\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "rideRequest_userId_fkey",
+        "table": "rideRequest"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"rideRequest_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rideRequest_userId_fkey",
+          "public",
+          "\"public\".\"rideRequest\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"rideRequest_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"rideRequest\"\nADD CONSTRAINT \"rideRequest_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"rideRequest_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rideRequest_userId_fkey",
+          "public",
+          "\"public\".\"rideRequest\""
+        ]
+      }
+    ]
+  }
+]
