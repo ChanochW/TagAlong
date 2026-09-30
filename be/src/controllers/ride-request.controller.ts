@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 import {
-    countAcceptedRequests,
+    acceptRideRequest,
     createRideRequest,
     createUser,
     findExistingRideRequest,
@@ -197,13 +197,9 @@ export async function patchRideRequest(
     req: Request,
     res: Response,
 ) {
-    const requestId =
-        Number(req.params.requestId);
+    const requestId = Number(req.params.requestId);
 
-    if (
-        !Number.isInteger(requestId) ||
-        requestId <= 0
-    ) {
+    if (!Number.isInteger(requestId) || requestId <= 0) {
         return res.status(400).json({
             message: "Invalid ride request id",
         });
@@ -220,9 +216,7 @@ export async function patchRideRequest(
 
     if (
         typeof status !== "string" ||
-        !allowedStatuses.includes(
-            status as RideRequestStatus,
-        )
+        !allowedStatuses.includes(status as RideRequestStatus)
     ) {
         return res.status(400).json({
             message:
@@ -231,8 +225,7 @@ export async function patchRideRequest(
     }
 
     try {
-        const request =
-            await getRideRequestById(requestId);
+        const request = await getRideRequestById(requestId);
 
         if (!request) {
             return res.status(404).json({
@@ -240,8 +233,7 @@ export async function patchRideRequest(
             });
         }
 
-        const ride =
-            await getRideById(request.rideId);
+        const ride = await getRideById(request.rideId);
 
         if (!ride) {
             return res.status(404).json({
@@ -251,8 +243,7 @@ export async function patchRideRequest(
 
         if (ride.status !== "SCHEDULED") {
             return res.status(409).json({
-                message:
-                    "Requests cannot be changed for this ride",
+                message: "Requests cannot be changed for this ride",
             });
         }
 
@@ -263,30 +254,41 @@ export async function patchRideRequest(
             });
         }
 
-        if (
-            status === "ACCEPTED" &&
-            request.status !== "ACCEPTED"
-        ) {
-            const acceptedCount =
-                await countAcceptedRequests(
-                    ride.id,
-                );
+        let updatedRequest;
 
-            if (acceptedCount >= ride.capacity) {
+        if (status === "ACCEPTED") {
+            updatedRequest =
+                await acceptRideRequest(requestId);
+        } else {
+            updatedRequest =
+                await updateRideRequestStatus(
+                    requestId,
+                    status as RideRequestStatus,
+                );
+        }
+
+        return res.json(updatedRequest);
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "RIDE_FULL") {
                 return res.status(409).json({
                     message: "Ride is already full",
                 });
             }
+
+            if (error.message === "RIDE_REQUEST_NOT_FOUND") {
+                return res.status(404).json({
+                    message: "Ride request not found",
+                });
+            }
+
+            if (error.message === "RIDE_NOT_FOUND") {
+                return res.status(404).json({
+                    message: "Ride not found",
+                });
+            }
         }
 
-        const updatedRequest =
-            await updateRideRequestStatus(
-                requestId,
-                status as RideRequestStatus,
-            );
-
-        return res.json(updatedRequest);
-    } catch (error) {
         logger.error(
             {
                 err: error,
@@ -296,8 +298,7 @@ export async function patchRideRequest(
         );
 
         return res.status(500).json({
-            message:
-                "Failed to update ride request",
+            message: "Failed to update ride request",
         });
     }
 }
