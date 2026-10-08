@@ -1,0 +1,5 @@
+### Get a ride
+GET http://localhost:3000/api/rides/5
+
+### Get all rides
+GET http://localhost:3000/api/rides

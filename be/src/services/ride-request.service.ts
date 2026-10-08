@@ -3,14 +3,37 @@ import { db } from "../prisma/db.js";
 import { logger } from "../logger.js";
 
 export async function getRideRequests(rideId: number) {
-    return db.orm.public.RideRequest
+    const requests = await db.orm.public.RideRequest
         .where({ rideId })
         .all();
+
+    return Promise.all(
+        requests.map(async (request) => {
+            const user = await getUserById(request.userId);
+
+            return {
+                ...request,
+                user: user
+                    ? {
+                        id: user.id,
+                        name: user.name,
+                        phoneNumber: user.phoneNumber,
+                    }
+                    : null,
+            };
+        }),
+    );
 }
 
 export async function getRideRequestById(requestId: number) {
     return db.orm.public.RideRequest
         .where({ id: requestId })
+        .first();
+}
+
+export async function getUserById(userId: number) {
+    return db.orm.public.User
+        .where({ id: userId })
         .first();
 }
 

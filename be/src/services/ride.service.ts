@@ -2,16 +2,53 @@ import { Temporal } from "temporal-polyfill/full";
 import { db } from "../prisma/db.js";
 import { logger } from "../logger.js";
 
+async function getAcceptedCount(rideId: number) {
+    const acceptedRequests = await db.orm.public.RideRequest
+        .where({
+            rideId,
+            status: "ACCEPTED",
+        })
+        .all();
+
+    return acceptedRequests.length;
+}
+
+async function addSeatCounts<T extends {
+    id: number;
+    capacity: number;
+}>(ride: T) {
+    const acceptedCount = await getAcceptedCount(ride.id);
+
+    return {
+        ...ride,
+        acceptedCount,
+        remainingSeats: Math.max(
+            ride.capacity - acceptedCount,
+            0,
+        ),
+    };
+}
+
 export async function getAllRides() {
-    return db.orm.public.Ride
+    const rides = await db.orm.public.Ride
         .orderBy((ride) => ride.departureTime.asc())
         .all();
+
+    return Promise.all(
+        rides.map((ride) => addSeatCounts(ride)),
+    );
 }
 
 export async function getRideById(id: number) {
-    return db.orm.public.Ride
+    const ride = await db.orm.public.Ride
         .where({ id })
         .first();
+
+    if (!ride) {
+        return null;
+    }
+
+    return addSeatCounts(ride);
 }
 
 export type CreateRideInput = {
@@ -40,7 +77,11 @@ export async function createRide(data: CreateRideInput) {
         "Ride created",
     );
 
-    return ride;
+    return {
+        ...ride,
+        acceptedCount: 0,
+        remainingSeats: ride.capacity,
+    };
 }
 
 export type UpdateRideInput = {
@@ -52,10 +93,17 @@ export type UpdateRideInput = {
     status?: "SCHEDULED" | "CANCELLED" | "COMPLETED";
 };
 
-export async function updateRide(id: number, data: UpdateRideInput) {
+export async function updateRide(
+    id: number,
+    data: UpdateRideInput,
+) {
     const ride = await db.orm.public.Ride
         .where({ id })
         .update(data);
+
+    if (!ride) {
+        return null;
+    }
 
     logger.info(
         {
@@ -65,7 +113,7 @@ export async function updateRide(id: number, data: UpdateRideInput) {
         "Ride updated",
     );
 
-    return ride;
+    return addSeatCounts(ride);
 }
 
 export async function deleteRide(id: number) {
